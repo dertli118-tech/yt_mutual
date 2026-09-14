@@ -1,0 +1,578 @@
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+void main() {
+  runApp(const YtMutualApp());
+}
+
+class YtMutualApp extends StatelessWidget {
+  const YtMutualApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'YT Mutual',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: const Color(0xFFDC2626),
+        scaffoldBackgroundColor: const Color(0xFFDC2626),
+      ),
+      home: const SplashScreen(),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _oturumuKontrolEt();
+  }
+
+  Future<void> _oturumuKontrolEt() async {
+    await Future.delayed(const Duration(seconds: 2));
+    final prefs = await SharedPreferences.getInstance();
+    String? kaydedilenEmail = prefs.getString('aktif_kullanici_email');
+
+    if (!mounted) return;
+
+    if (kaydedilenEmail != null && kaydedilenEmail.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DashboardScreen(userEmail: kaydedilenEmail),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 65,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Container(
+                  width: 0,
+                  height: 0,
+                  margin: const EdgeInsets.only(left: 4),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(width: 12, color: Colors.transparent),
+                      bottom: BorderSide(width: 12, color: Colors.transparent),
+                      left: BorderSide(width: 20, color: Color(0xFFDC2626)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              'Yt Mutual',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      String email = account?.email ?? "ytmutual@user.com";
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('aktif_kullanici_email', email);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(userEmail: email),
+          ),
+        );
+      }
+    } catch (error) {
+      String email = "ytmutual@user.com";
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('aktif_kullanici_email', email);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(userEmail: email),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Spacer(),
+            Container(
+              width: 85,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Container(
+                  width: 0,
+                  height: 0,
+                  margin: const EdgeInsets.only(left: 4),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(width: 12, color: Colors.transparent),
+                      bottom: BorderSide(width: 12, color: Colors.transparent),
+                      left: BorderSide(width: 20, color: Color(0xFFDC2626)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              'Yt Mutual',
+              style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30),
+              child: Text(
+                'Kanalınız için daha fazla abone, beğeni ve izlenme kazanın.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.fromLTRB(25, 35, 25, 25),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(35),
+                  topRight: Radius.circular(35),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: _handleGoogleSignIn,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFFE5E7EB), width: 2),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text('🌐', style: TextStyle(fontSize: 18)),
+                          SizedBox(width: 10),
+                          Text(
+                            'Google ile Giriş Yap',
+                            style: TextStyle(
+                              color: Color(0xFF374151),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DashboardScreen extends StatefulWidget {
+  final String userEmail;
+  const DashboardScreen({Key? key, required this.userEmail}) : super(key: key);
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _puan = 178;
+  bool _otomatikMod = false;
+  int _seciliTab = 1;
+
+  final String _youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _puaniYukle();
+  }
+
+  Future<void> _puaniYukle() async {
+    final prefs = await SharedPreferences.getInstance();
+    int? emailPuani = prefs.getInt('kullanici_puani_${widget.userEmail}');
+    int? genelPuan = prefs.getInt('kalici_genel_puan_miktari');
+    int yuklenenPuan = emailPuani ?? genelPuan ?? 178;
+    setState(() {
+      _puan = yuklenenPuan;
+    });
+  }
+
+  Future<void> _puanKaydet(int yeniPuan) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('kullanici_puani_${widget.userEmail}', yeniPuan);
+    await prefs.setInt('kalici_genel_puan_miktari', yeniPuan);
+    setState(() {
+      _puan = yeniPuan;
+    });
+  }
+
+  Future<void> _cikisYap() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('aktif_kullanici_email');
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  Future<void> _videoAc() async {
+    final Uri url = Uri.parse(_youtubeVideoUrl);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Video açılamadı: $url');
+    }
+  }
+
+  void _gorevTamamla() {
+    int yeniBakiye = _puan + 48;
+    _puanKaydet(yeniBakiye);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Tebrikler! +48 Puan eklendi.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String ilkHarf = widget.userEmail.isNotEmpty ? widget.userEmail[0].toUpperCase() : 'A';
+    String kullaniciAdi = widget.userEmail.contains('@') 
+        ? widget.userEmail.split('@')[0] 
+        : widget.userEmail;
+
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.black87),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        title: const Text(
+          'Yt Mutual',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Row(
+              children: [
+                Text('$_puan', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(width: 4),
+                const Icon(Icons.favorite, color: Colors.red, size: 20),
+              ],
+            ),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 65,
+                    height: 65,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(
+                        ilkHarf,
+                        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(kullaniciAdi, style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(widget.userEmail, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF3F4F6)),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red, size: 22),
+                    title: const Text('Çıkış yap', style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _cikisYap();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_seciliTab == 1)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Colors.grey[100],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('Otomatik', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                        const SizedBox(width: 8),
+                        Switch(
+                          value: _otomatikMod,
+                          activeColor: Colors.red,
+                          onChanged: (val) => setState(() => _otomatikMod = val),
+                        ),
+                      ],
+                    ),
+                    const Icon(Icons.error_outline, color: Colors.black54),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: _seciliTab == 0
+                  ? _buildKampanyaEkrani()
+                  : SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          if (_seciliTab == 1) ...[
+                            GestureDetector(
+                              onTap: _videoAc,
+                              child: Container(
+                                height: 240,
+                                width: double.infinity,
+                                color: Colors.black,
+                                child: const Center(
+                                  child: Icon(Icons.play_circle_fill, color: Colors.red, size: 70),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 25),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                                  ),
+                                  onPressed: _gorevTamamla,
+                                  child: const Text('Değiştir', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(Icons.format_list_bulleted, 'Kampanya', 0),
+                  _buildNavItem(Icons.play_arrow_rounded, 'İzle', 1),
+                  _buildNavItem(Icons.subscriptions, 'Abone Ol', 2),
+                  _buildNavItem(Icons.thumb_up, 'Beğen', 3),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKampanyaEkrani() {
+    return Stack(
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDC2626),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.favorite, color: Colors.white, size: 50),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text('Kampanya bulunamadı.', style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Yeni kampanya oluşturmak için + butonuna dokunun.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: FloatingActionButton(
+            backgroundColor: const Color(0xFFDC2626),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreateCampaignScreen(
+                    mevcutPuan: _puan,
+                    onPuanGuncelle: (yeniPuan) => _puanKaydet(yeniPuan),
+                  ),
+                ),
+              );
+            },
+            child: const Icon(Icons.add, color: Colors.white, size: 28),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    bool isSelected = _seciliTab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _seciliTab = index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isSelected ? Colors.red : Colors.grey, size: 24),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: isSelected ? Colors.red : Colors.grey, fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
+  }
+}
+
+class CreateCampaignScreen extends StatefulWidget {
+  final int mevcutPuan;
+  final Function(int) onPuanGuncelle;
+  const CreateCampaignScreen({Key? key, required this.mevcutPuan, required this.onPuanGuncelle}) : super(key: key);
+
+  @override
+  State<CreateCampaignScreen> createState() => _CreateCampaignScreenState();
+}
+
+class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
+  int _seciliKampanyaTuru = 0;
+  final TextEditingController _urlController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Kampanya Oluştur', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Row(
+              children: [
+                Text('${widget.mevcutPuan}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, 
