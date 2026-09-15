@@ -62,9 +62,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text('Yt Mutual Yükleniyor...', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 65,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              'Yt Mutual',
+              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -115,10 +132,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _handleGoogleSignIn,
-          child: const Text('Google ile Giriş Yap'),
+      body: SafeArea(
+        child: Center(
+          child: ElevatedButton(
+            onPressed: _handleGoogleSignIn,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
+            child: const Text('Google ile Giriş Yap'),
+          ),
         ),
       ),
     );
@@ -135,19 +155,76 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _puan = 6556;
+  int _seciliTab = 0;
+
+  Future<void> _puaniYukle() async {
+    final prefs = await SharedPreferences.getInstance();
+    int? emailPuani = prefs.getInt('kullanici_puani_${widget.userEmail}');
+    setState(() {
+      _puan = emailPuani ?? 6556;
+    });
+  }
+
+  Future<void> _puanKaydet(int yeniPuan) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('kullanici_puani_${widget.userEmail}', yeniPuan);
+    setState(() {
+      _puan = yeniPuan;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _puaniYukle();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Yt Mutual Dashboard')),
-      body: Center(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text('Yt Mutual', style: TextStyle(color: Colors.black87)),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text('$_puan Puan', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+          ),
+        ],
+      ),
+      body: _seciliTab == 0 ? _buildKampanyaEkrani() : Center(child: Text('Sayfa $_seciliTab')),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _seciliTab,
+        onTap: (index) => setState(() => _seciliTab = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Kampanya'),
+          BottomNavigationBarItem(icon: Icon(Icons.play_arrow), label: 'İzle'),
+          BottomNavigationBarItem(icon: Icon(Icons.subscriptions), label: 'Abone Ol'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKampanyaEkrani() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Puanınız: $_puan', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
+            const Icon(Icons.favorite, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text('Kampanya Bulunamadı', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -155,15 +232,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     builder: (context) => CreateCampaignScreen(
                       mevcutPuan: _puan,
                       onKampanyaOlustur: (maliyet) {
-                        setState(() {
-                          _puan -= maliyet;
-                        });
+                        _puanKaydet(_puan - maliyet);
                       },
                     ),
                   ),
                 );
               },
-              child: const Text('KAMPANYA OLUŞTUR (TEST)', style: TextStyle(color: Colors.white, fontSize: 16)),
+              icon: const Icon(Icons.add),
+              label: const Text('Kampanya Oluştur', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -172,38 +248,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class CreateCampaignScreen extends StatelessWidget {
+class CreateCampaignScreen extends StatefulWidget {
   final int mevcutPuan;
   final Function(int) onKampanyaOlustur;
 
   const CreateCampaignScreen({Key? key, required this.mevcutPuan, required this.onKampanyaOlustur}) : super(key: key);
 
   @override
+  State<CreateCampaignScreen> createState() => _CreateCampaignScreenState();
+}
+
+class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
+  final TextEditingController _urlController = TextEditingController();
+  int _adet = 25;
+  int _sure = 60;
+
+  int get _maliyet => _adet * _sure;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kampanya Oluşturma Ekranı'),
+        title: const Text('Kampanya Oluştur'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Başarılı! Sayfa Açıldı 🎉',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
+            TextField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                labelText: 'Video Bağlantı Adresi (URL)',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 20),
-            Text('Mevcut Puanınız: $mevcutPuan', style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                onKampanyaOlustur(50); // 50 puan düş
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Test kampanyası oluşturuldu!')),
-                );
-                Navigator.pop(context);
-              },
-              child: const Text('Test Kampanyası Tamamla (50 Puan Harca)'),
+            Text('Seçilen Adet: $_adet | Süre: $_sure sn', style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 20),
+            Text('Toplam Maliyet: $_maliyet Puan', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC2626),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  if (widget.mevcutPuan < _maliyet) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Yetersiz Puan!')),
+                    );
+                    return;
+                  }
+                  widget.onKampanyaOlustur(_maliyet);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Kampanya Başarıyla Oluşturuldu!')),
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text('Kampanyayı Tamamla', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
             ),
           ],
         ),
