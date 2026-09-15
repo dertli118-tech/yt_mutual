@@ -1,9 +1,3 @@
-Harika bir tasarım! İstediğin gibi Kampanya Oluştur ekranını gönderdiğin görseldeki birebir düzene (bilgilendirme kutusu, video adres alanı, sekme seçenekleri, ayarlar ve dinamik maliyet hesaplama özellikleriyle) güncelledim.
-🛠️ Güncellemeyi Uygulama Adımları:
- * GitHub'daki lib/main.dart dosyanı aç ve düzenleme moduna geç.
- * Tüm eski kodları silip aşağıdakini yapıştır.
- * "Commit changes" ile kaydet ve Codemagic'ten yeni APK'nı al.
-📋 Güncel Kod (main.dart):
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -254,9 +248,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _puan = 6556; // Görseldeki örnek puan ile başlatıldı
+  int _puan = 6556;
   bool _otomatikMod = false;
-  int _seciliTab = 0; // Varsayılan kampanya ekranı
+  int _seciliTab = 0;
 
   final String _youtubeVideoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -410,7 +404,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? _buildAboneOlEkrani()
                           : _buildBegenEkrani(),
             ),
-            // Reklam Alanı Banner
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               color: Colors.grey[100],
@@ -900,22 +893,86 @@ class CreateCampaignScreen extends StatefulWidget {
 
 class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
   int _seciliTip = 0; // 0: İzlenme, 1: Abone Ol, 2: Beğeni
-  int _izlenmeSayisi = 25;
+  int _adet = 25;
   int _gerekenSure = 60;
   final TextEditingController _urlController = TextEditingController();
 
   int get _toplamMaliyet {
     if (_seciliTip == 0) {
-      return _izlenmeSayisi * _gerekenSure; // Örneğin 25 * 60 = 1500
+      return _adet * _gerekenSure; // İzlenme için maliyet hesabı
     } else if (_seciliTip == 1) {
-      return 500;
+      return _adet * 100; // Abone ol için maliyet hesabı
     } else {
-      return 300;
+      return _adet * 50; // Beğeni için maliyet hesabı
     }
+  }
+
+  void _adetSecDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        List<int> secenekler = [10, 25, 50, 100, 200, 500];
+        return AlertDialog(
+          title: Text(_seciliTip == 0 ? 'İzlenme Sayısı Seçin' : _seciliTip == 1 ? 'Abone Sayısı Seçin' : 'Beğeni Sayısı Seçin'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: secenekler.length,
+              itemBuilder: (context, index) {
+                int sayi = secenekler[index];
+                return ListTile(
+                  title: Text('$sayi adet'),
+                  onTap: () {
+                    setState(() {
+                      _adet = sayi;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _sureSecDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        List<int> sureler = [30, 45, 60, 90, 120];
+        return AlertDialog(
+          title: const Text('Gereken Süre (sn.) Seçin'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sureler.length,
+              itemBuilder: (context, index) {
+                int sure = sureler[index];
+                return ListTile(
+                  title: Text('$sure saniye'),
+                  onTap: () {
+                    setState(() {
+                      _gerekenSure = sure;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    String adetBaslik = _seciliTip == 0 ? 'İzlenme Sayısı' : _seciliTip == 1 ? 'Abone Sayısı' : 'Beğeni Sayısı';
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -942,7 +999,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Siyah Bilgilendirme Banner'ı
             Container(
               width: double.infinity,
               color: Colors.black,
@@ -963,8 +1019,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Video Bilgi Kutusu
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -997,8 +1051,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Video Bağlantı Adresi Giriş Alanı
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -1039,8 +1091,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Kampanya Türü Seçimi (İzlenme / Abone Ol / Beğeni)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -1060,8 +1110,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ),
             ),
             const SizedBox(height: 25),
-
-            // Kampanya Ayarları Başlığı
             Row(
               children: const [
                 Expanded(child: Divider(thickness: 1, indent: 20, endIndent: 10)),
@@ -1070,61 +1118,63 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ],
             ),
             const SizedBox(height: 15),
-
-            // Ayar Satırları
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
-                    children: [
-                      const Text('İzlenme Sayısı', style: TextStyle(fontSize: 14, color: Colors.black8N ?? Colors.black87, fontWeight: FontWeight.w500)),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                  GestureDetector(
+                    onTap: _adetSecDialog,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.between,
+                      children: [
+                        Text(adetBaslik, style: const TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Text('$_adet', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.keyboard_arrow_down, size: 20, color: Colors.grey),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            Text('$_izlenmeSayisi', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.keyboard_arrow_down, size: 20, color: Colors.grey),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
-                    children: [
-                      const Text('Gereken Süre (sn.)', style: TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500)),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
+                  GestureDetector(
+                    onTap: _sureSecDialog,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.between,
+                      children: [
+                        const Text('Gereken Süre (sn.)', style: TextStyle(fontSize: 14, color: Colors.black87, fontWeight: FontWeight.w500)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Text('$_gerekenSure', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.keyboard_arrow_down, size: 20, color: Colors.grey),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            Text('$_gerekenSure', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.keyboard_arrow_down, size: 20, color: Colors.grey),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 25),
-
-            // Kampanya Maliyeti Başlığı
             Row(
               children: const [
                 Expanded(child: Divider(thickness: 1, indent: 20, endIndent: 10)),
@@ -1133,8 +1183,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ],
             ),
             const SizedBox(height: 15),
-
-            // Toplam Tutar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
@@ -1152,8 +1200,6 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               ),
             ),
             const SizedBox(height: 35),
-
-            // Oluştur Butonu
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: SizedBox(
@@ -1219,4 +1265,3 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
     );
   }
 }
-
