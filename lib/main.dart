@@ -813,56 +813,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildKampanyaEkrani() {
-    return Stack(
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDC2626),
-                    borderRadius: BorderRadius.circular(24),
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDC2626),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Center(
+                  child: Icon(Icons.favorite, color: Colors.white, size: 50),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text('Kampanya bulunamadı.', style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Yeni kampanya oluşturmak için aşağıdaki butona dokunun.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                   ),
-                  child: const Center(
-                    child: Icon(Icons.favorite, color: Colors.white, size: 50),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CreateCampaignScreen(
+                          mevcutPuan: _puan,
+                          onKampanyaOlustur: (maliyet) {
+                            int yeniPuan = _puan - maliyet;
+                            _puanKaydet(yeniPuan);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.add, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Kampanya Oluştur', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text('Kampanya bulunamadı.', style: TextStyle(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('Yeni kampanya oluşturmak için + butonuna dokunun.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 13)),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-        Positioned(
-          bottom: 20,
-          right: 20,
-          child: FloatingActionButton(
-            backgroundColor: const Color(0xFFDC2626),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CreateCampaignScreen(
-                    mevcutPuan: _puan,
-                    onKampanyaOlustur: (maliyet) {
-                      int yeniPuan = _puan - maliyet;
-                      _puanKaydet(yeniPuan);
-                    },
-                  ),
-                ),
-              );
-            },
-            child: const Icon(Icons.add, color: Colors.white, size: 28),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
