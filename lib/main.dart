@@ -899,11 +899,11 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
 
   int get _toplamMaliyet {
     if (_seciliTip == 0) {
-      return _adet * _gerekenSure; // İzlenme için maliyet hesabı
+      return _adet * _gerekenSure; 
     } else if (_seciliTip == 1) {
-      return _adet * 100; // Abone ol için maliyet hesabı
+      return _adet * 100; 
     } else {
-      return _adet * 50; // Beğeni için maliyet hesabı
+      return _adet * 50; 
     }
   }
 
